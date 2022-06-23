@@ -45,9 +45,9 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     // Retrofit
-   // implementation 'com.squareup.retrofit2:retrofit:2.7.2'
-   // implementation 'com.squareup.retrofit2:converter-gson:2.7.2'
-    implementation 'com.squareup.okhttp3:okhttp:3.14.7'
+    implementation 'com.squareup.retrofit2:retrofit:2.7.2'
+    implementation 'com.squareup.retrofit2:converter-gson:2.7.2'
+    //implementation 'com.squareup.okhttp3:okhttp:3.14.7'
 
     // JSON converter Jackson
     //implementation 'com.squareup.retrofit2:converter-jackson:2.1.0'

@@ -32,8 +32,6 @@ class MainActivity : AppCompatActivity() {
 
         val socketServerThread = Thread {
 
-            var count = 0
-
             try {
 
                 serverSocket = ServerSocket(SocketServerPORT)
@@ -53,8 +51,7 @@ class MainActivity : AppCompatActivity() {
 
                     val request = obtainRequest(bReader)
 
-                    count++
-                    message = "#$count from ${socket.inetAddress}:${socket.port}\n"
+                    message = "Requested from ${socket.inetAddress}:${socket.port}\n"
 
                     runOnUiThread {
                         viewBinding.messageTextView.text = message
@@ -63,20 +60,14 @@ class MainActivity : AppCompatActivity() {
                     val socketServerReplyThread = Thread {
 
                         val outputStream: OutputStream
-                        val msgReply = "Hello from Android, you are #$count\n"
 
                         try {
 
                             outputStream = socket.getOutputStream()
 
                             val pw = PrintWriter(outputStream, true)
-                            val response = "{\n" +
-                                    "  \"status\": \"OK\",\n" +
-                                    "  \"data\": [\n" +
-                                    "    \"sale\",\n" +
-                                    "    \"receipt\"\n" +
-                                    "  ]\n" +
-                                    "}\n"
+
+                            val response = buildResponse(request)
 
                             pw.print(
                                 """
@@ -110,7 +101,7 @@ class MainActivity : AppCompatActivity() {
                             inputStreamReader.close()
                             bReader.close()
 
-                            message = "replayed: $msgReply\n"
+                            message = "requested endpoint: ${request.endpoint}\n"
 
                             runOnUiThread {
                                 viewBinding.messageTextView.text = message
@@ -136,7 +127,7 @@ class MainActivity : AppCompatActivity() {
         socketServerThread.start()
     }
 
-    private fun obtainRequest(bReader: BufferedReader) : Request{
+    private fun obtainRequest(bReader: BufferedReader) : Request {
 
         fun Reader.copyToSingle(out: Writer, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
             val charsCopied: Long = 0
@@ -166,7 +157,7 @@ class MainActivity : AppCompatActivity() {
         val afterMethodIndex = inputLine.indexOf("/")
         val command = inputLine.substring(0, afterMethodIndex).trim()
 
-        var raw = bReader.readTextSingle()
+        var rawBody = bReader.readTextSingle()
 
         inputLine = inputLine.substring(afterMethodIndex + 1)
         inputLine = inputLine.substring(0, inputLine.indexOf(' '))
@@ -174,14 +165,48 @@ class MainActivity : AppCompatActivity() {
         val endpoint = if(checkEndpoint(inputLine)) inputLine else ""
 
         return when(command){
-            "GET" -> {
-                Request.Get(endpoint)
-            }
+            "GET" -> Request.Get(endpoint)
             "POST" -> {
-                raw = raw.substring(raw.indexOf("{"))
-                Request.Post(endpoint, raw)
+                rawBody = rawBody.substring(rawBody.indexOf("{"))
+                Request.Post(endpoint, rawBody)
             }
             else -> Request.Error()         // Additional
+        }
+    }
+
+    private fun buildResponse(request: Request): String{
+        return when(request.endpoint){
+
+            "supported_operations" -> {
+                "{\n" +
+                        "  \"status\": \"OK\",\n" +
+                        "  \"data\": [\n" +
+                        "    \"sale\",\n" +
+                        "    \"receipt\"\n" +
+                        "  ]\n" +
+                        "}\n"
+            }
+
+            "sale" -> {
+                "{\n" +
+                        "  \"status\": \"OK\",\n" +
+                        "  \"method\": [\n" +
+                        "    \"sale\",\n" +
+                        "  ]\n" +
+                        "}" // TODO: response for sale request
+            }
+
+            "receipt" -> {
+                "{\n" +
+                        "  \"status\": \"OK\",\n" +
+                        "  \"method\": [\n" +
+                        "    \"receipt\",\n" +
+                        "  ]\n" +
+                        "}" // TODO: response for receipt request
+            }
+            else -> {"{\n" +
+                    "  \"status\": \"ERROR\",\n" +
+                    "}\n"}
         }
     }
 

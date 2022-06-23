@@ -28,6 +28,7 @@
         android:id="@+id/message_text_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textSize="30sp"
         app:layout_constraintTop_toTopOf="@id/ip_text_view"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
